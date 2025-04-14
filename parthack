@@ -1,0 +1,34 @@
+local tool = Instance.new("Tool")
+tool.RequiresHandle = false
+tool.Name = "GhostBuilder"
+
+local remoteSpamCooldown = 0.5
+local lastFire = time()
+
+tool.Activated:Connect(function()
+    local mouse = game:GetService("Players").LocalPlayer:GetMouse()
+    local hit = mouse.Hit
+    
+    -- Client-side visual effect
+    local part = Instance.new("Part")
+    part.Anchored = true
+    part.Color = Color3.new(1,0,0)
+    part.Size = Vector3.new(2,2,2)
+    part.Position = hit.Position
+    part.Parent = workspace
+    
+    -- Server replication attempt
+    if time() - lastFire > remoteSpamCooldown then
+        local remotes = game:GetService("ReplicatedStorage"):GetChildren()
+        for _, remote in pairs(remotes) do
+            if remote:IsA("RemoteEvent") then
+                pcall(function()
+                    remote:FireServer("PlacePart", hit.Position)
+                end)
+            end
+        end
+        lastFire = time()
+    end
+end)
+
+tool.Parent = game:GetService("Players").LocalPlayer.Backpack
